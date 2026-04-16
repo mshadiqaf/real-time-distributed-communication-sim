@@ -187,8 +187,7 @@ strong, b { font-weight: 600; color: #fff; }
   background: var(--bg-panel);
   border-left: 1px solid var(--border);
   box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden; /* Prevent sidebar itself from scrolling to maintain layout */
   z-index: 10;
 }
 #sidebar::-webkit-scrollbar { width: 8px; }
@@ -204,7 +203,8 @@ strong, b { font-weight: 600; color: #fff; }
 .panel--grow { 
   display: flex; flex-direction: column;
   border-bottom: none;
-  min-height: 400px; /* guarantees metrics and log have space */
+  flex: 1; /* Occupy remaining space */
+  overflow: hidden; /* Contain the scrollable log inside */
 }
 .panel-title { 
   font-family: 'Outfit', sans-serif;
@@ -316,7 +316,10 @@ strong, b { font-weight: 600; color: #fff; }
   padding-top: var(--space-3); border-top: 1px solid var(--border);
 }
 .sequence-log {
-  flex: 1; overflow-y: auto; padding-right: 8px; min-height: 250px;
+  flex: 1; 
+  overflow-y: auto; 
+  padding-right: 8px; 
+  /* Remove min-height to allow it to shrink if needed */
 }
 .sequence-log::-webkit-scrollbar { width: 6px; }
 .sequence-log::-webkit-scrollbar-track { background: transparent; }
