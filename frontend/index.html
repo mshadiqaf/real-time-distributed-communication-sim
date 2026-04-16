@@ -6,7 +6,7 @@
     <title>Distributed Comm Sim — Ride-Hailing</title>
     <meta name="description" content="Interactive simulation of 4 distributed communication models using a Ride-Hailing case study: Request-Response, Pub-Sub, Message Queue, and RPC." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
@@ -28,6 +28,7 @@
       <!-- Canvas section -->
       <section id="canvas-section">
         <canvas id="topology-canvas"></canvas>
+        <div id="topology-nodes"></div>
         <div id="canvas-overlay-label">Topology View</div>
       </section>
 
@@ -74,6 +75,24 @@
         <div class="panel panel--grow" id="metrics-panel">
           <h2 class="panel-title" style="display:flex; gap:6px; align-items:center;"><i data-lucide="bar-chart-2" style="width:16px;"></i> Metrik Kinerja</h2>
           <div id="metrics-widget" class="metrics-grid"></div>
+
+          <div class="log-header" style="margin-top: 15px;">Riwayat Perbandingan Eksekusi</div>
+          <div class="table-container" style="max-height: 150px; overflow-y: auto; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; background: rgba(0,0,0,0.2);">
+            <table class="comparison-table" style="width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: left;">
+              <thead style="background: rgba(0,0,0,0.4); color: #9CA3AF; position: sticky; top: 0;">
+                <tr>
+                  <th style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">Model</th>
+                  <th style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">Konfig (L/D)</th>
+                  <th style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">Waktu (ms)</th>
+                  <th style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">Status</th>
+                </tr>
+              </thead>
+              <tbody id="comparison-tbody">
+                <tr><td colspan="4" style="text-align:center; padding:12px; color:rgba(255,255,255,0.3);">Belum ada riwayat tercatat</td></tr>
+              </tbody>
+            </table>
+          </div>
+
           <div class="log-header">Log Urutan Pesan</div>
           <div id="sequence-log" class="sequence-log"></div>
         </div>

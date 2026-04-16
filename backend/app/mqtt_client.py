@@ -1,92 +1,82 @@
+# File ini mengelola satu koneksi MQTT yang dipakai bersama oleh seluruh aplikasi.
+# Kita pakai pola Singleton supaya tidak ada dua koneksi ke broker yang terbuka sekaligus.
+# Setiap topik MQTT bisa punya callback-nya sendiri lewat register_topic_callback().
+
 import paho.mqtt.client as mqtt
 import json
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Global MQTT Client
-_mqtt_client = None
+_mqtt_client = None      # Instance klien MQTT, dibuat sekali saja
+_topic_callbacks = {}    # Pemetaan topik → fungsi yang dipanggil saat pesan datang
 
-# We use global callbacks mapping to dispatch messages based on topics
-# e.g. {"sim/ride/orders": pub_sub_callback, "sim/ride/payments": message_queue_callback}
-_topic_callbacks = {}
 
 def get_mqtt_client():
+    # Fungsi ini berguna untuk mengambil instance klien MQTT yang sudah aktif
     global _mqtt_client
     if _mqtt_client is None:
-        raise RuntimeError("MQTT Client has not been initialized.")
+        raise RuntimeError("MQTT Client belum diinisialisasi. Panggil init_mqtt() dulu.")
     return _mqtt_client
 
+
 def init_mqtt(app):
-    """
-    Initializes the MQTT client, connects to the public broker, 
-    and starts the background loop.
-    """
+    # Fungsi ini berguna untuk membuat koneksi ke broker MQTT publik EMQX
+    # dan menjalankan loop jaringannya di background thread
     global _mqtt_client
-    
+
+    # Jangan buat ulang kalau sudah ada
     if _mqtt_client is not None:
         return _mqtt_client
 
-    # Initialize the client. The callback API version 2 is recommended for paho-mqtt >= 2.0
     _mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-    
+
     def on_connect(client, userdata, flags, reason_code, properties):
+        # Dipanggil saat koneksi ke broker selesai (berhasil atau gagal)
         if reason_code == 0:
-            logger.info("Successfully connected to public MQTT broker.")
-            # Subscribe to topics we care about
+            logger.info("Berhasil terhubung ke broker MQTT publik.")
             for topic in _topic_callbacks.keys():
                 client.subscribe(topic)
-                logger.info(f"Subscribed to MQTT topic: {topic}")
+                logger.info(f"Subscribe ke topik: {topic}")
         else:
-            logger.error(f"Failed to connect to MQTT broker, reason code: {reason_code}")
+            logger.error(f"Gagal terhubung, kode: {reason_code}")
 
     def on_message(client, userdata, msg):
+        # Dipanggil setiap kali ada pesan masuk dari topik yang di-subscribe
         topic = msg.topic
         try:
             payload = json.loads(msg.payload.decode('utf-8'))
-            logger.info(f"Received MQTT Message on {topic}: {payload}")
-            
-            # Dispatch to registered callback
+            logger.info(f"Pesan diterima di {topic}: {payload}")
             if topic in _topic_callbacks:
                 socketio_instance = userdata.get('socketio')
                 _topic_callbacks[topic](payload, socketio_instance)
         except Exception as e:
-            logger.error(f"Error processing MQTT message: {e}")
+            logger.error(f"Error memproses pesan MQTT: {e}")
 
     _mqtt_client.on_connect = on_connect
     _mqtt_client.on_message = on_message
-    
-    # We will pass socketio instance as userdata so callbacks can emit to UI
-    # This will be set by the caller right after initialization
-    _mqtt_client.user_data_set({'socketio': None})
-    
+    _mqtt_client.user_data_set({'socketio': None})  # Akan diisi oleh create_app()
+
     try:
-        # We use EMQX public broker for simulation purposes
-        host = "broker.emqx.io"
-        port = 1883
-        
-        logger.info(f"Connecting to MQTT broker at {host}:{port}...")
-        _mqtt_client.connect(host, port, 60)
-        
-        # Start the network loop in a background thread
-        _mqtt_client.loop_start()
+        logger.info("Menghubungkan ke broker.emqx.io:1883...")
+        _mqtt_client.connect("broker.emqx.io", 1883, keepalive=60)
+        _mqtt_client.loop_start()  # Jalankan di background thread agar tidak blokir Flask
     except Exception as e:
-        logger.error(f"Failed to initialize MQTT: {e}")
-        
+        logger.error(f"Gagal koneksi MQTT: {e}")
+
     return _mqtt_client
 
+
 def register_topic_callback(topic, callback):
-    """
-    Register a function to be called when a message arrives on a given topic.
-    """
+    # Fungsi ini berguna untuk mendaftarkan fungsi yang akan dipanggil
+    # setiap kali ada pesan masuk di topik tertentu
     _topic_callbacks[topic] = callback
     if _mqtt_client and _mqtt_client.is_connected():
         _mqtt_client.subscribe(topic)
 
+
 def publish_message(topic, payload):
-    """
-    Publish a JSON payload to a given topic.
-    """
+    # Fungsi ini berguna untuk mengirim pesan JSON ke topik MQTT tertentu
     client = get_mqtt_client()
     client.publish(topic, json.dumps(payload))
-    logger.info(f"Published to {topic}: {payload}")
+    logger.info(f"Diterbitkan ke {topic}: {payload}")
