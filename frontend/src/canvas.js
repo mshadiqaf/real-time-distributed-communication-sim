@@ -111,8 +111,6 @@ export function resetView() {
 // Fungsi ini berguna untuk mengganti model komunikasi aktif dan memperbarui tampilan
 export function setModel(model) {
   currentModel = model;
-  const container = document.getElementById('topology-nodes');
-  if (container) container.innerHTML = ''; // Kosongkan agar di-generate ulang dengan model baru
   redraw();
   updateDOMNodes();
 }
@@ -187,32 +185,42 @@ function updateDOMNodes() {
   container.style.transformOrigin = '0 0';
   container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
 
-  // Jika belum di-generate, buat elemennya (hanya dipanggil saat model berubah)
-  // Namun kita tetap panggil updateDOMNodes saat pan/zoom untuk mengupdate transform
-  if (container.children.length === 0) {
-    const visible = VISIBLE_NODES[currentModel] || [];
-    visible.forEach(key => {
-      const def = NODE_DEFS[key];
-      const pos = resolvePos(def);
+  const visible = VISIBLE_NODES[currentModel] || [];
 
-      const div = document.createElement('div');
+  // Sinkronkan elemen DOM dengan daftar node yang seharusnya terlihat
+  visible.forEach(key => {
+    let div = document.getElementById(`node-dom-${key}`);
+    const def = NODE_DEFS[key];
+    const pos = resolvePos(def);
+
+    // Jika elemen belum ada, buat baru
+    if (!div) {
+      div = document.createElement('div');
       div.className = 'node-element';
       div.id        = `node-dom-${key}`;
-      div.style.left = `${pos.x}px`;
-      div.style.top  = `${pos.y}px`;
-      div.style.setProperty('--node-color', def.color);
-
       div.innerHTML = `
         <div class="node-icon-wrapper">
           <i data-lucide="${def.icon}" class="node-icon"></i>
         </div>
         <div class="node-label">${def.label}</div>
       `;
-
       container.appendChild(div);
-    });
-    if (window.lucide) window.lucide.createIcons();
-  }
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    // Selalu perbarui posisi dasar (left/top) agar responsif terhadap ukuran layar/parent
+    div.style.left = `${pos.x}px`;
+    div.style.top  = `${pos.y}px`;
+    div.style.setProperty('--node-color', def.color);
+  });
+
+  // Hapus node yang tidak termasuk dalam model aktif saat ini
+  Array.from(container.children).forEach(child => {
+    const key = child.id.replace('node-dom-', '');
+    if (!visible.includes(key)) {
+      child.remove();
+    }
+  });
 }
 
 // Fungsi ini berguna untuk menghapus kanvas dan menggambar ulang garis serta paket
