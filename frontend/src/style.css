@@ -446,3 +446,36 @@ strong, b { font-weight: 600; color: #fff; }
   color: var(--text-primary);
 }
 
+/* CANVAS INTERACTION BUTTONS */
+.canvas-btn {
+  position: absolute;
+  bottom: var(--space-4);
+  right: var(--space-4);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(30, 30, 35, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  transition: all var(--trans-fast);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.canvas-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-2px) rotate(15deg);
+  box-shadow: 0 0 20px var(--accent);
+}
+.canvas-btn i { width: 18px; height: 18px; }
+
+#canvas-section {
+  cursor: crosshair; /* Default cursor for canvas */
+}
+
+

@@ -5,7 +5,7 @@
 */
 import './style.css';
 import { io } from 'socket.io-client';
-import { setModel, animatePacket, pulseNode, setDriverCount, setNodeStatus } from './canvas.js';
+import { setModel, animatePacket, pulseNode, setDriverCount, setNodeStatus, resetView } from './canvas.js';
 
 const API = 'http://localhost:5000';
 
@@ -147,6 +147,10 @@ driverSlider.addEventListener('input', () => {
 triggerBtn.addEventListener('click', () => {
   if (isBusy) return;
   runSimulation();
+});
+
+document.getElementById('reset-view-btn')?.addEventListener('click', () => {
+  resetView();
 });
 
 // Fungsi ini berguna untuk menyiapkan tampilan awal aplikasi saat halaman pertama dibuka

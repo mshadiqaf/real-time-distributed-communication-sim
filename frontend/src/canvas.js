@@ -42,9 +42,77 @@ let currentModel = 'req-res';
 let w = 0, h = 0;
 let packets = []; // Daftar paket yang sedang bergerak saat ini
 
+// --- INTERACTION STATE ---
+let scale = 1;
+let panX = 0;
+let panY = 0;
+let isDragging = false;
+let startX = 0;
+let startY = 0;
+
+const section = document.getElementById('canvas-section');
+
+function initInteraction() {
+  if (!section) return;
+
+  section.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    section.style.cursor = 'grabbing';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    redraw();
+    updateDOMNodes();
+  });
+
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    if (section) section.style.cursor = 'crosshair';
+  });
+
+  section.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomSpeed = 0.001;
+    const factor = Math.pow(1.1, -e.deltaY / 100);
+    
+    // Hitung titik zoom (posisi mouse relatif terhadap section)
+    const rect = section.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Logika "Zoom to Mouse"
+    const newScale = Math.min(Math.max(scale * factor, 0.5), 5); // Batasi zoom 0.5x - 5x
+    const actualFactor = newScale / scale;
+
+    panX = mouseX - (mouseX - panX) * actualFactor;
+    panY = mouseY - (mouseY - panY) * actualFactor;
+    scale = newScale;
+
+    redraw();
+    updateDOMNodes();
+  }, { passive: false });
+}
+
+initInteraction();
+
+export function resetView() {
+  scale = 1;
+  panX = 0;
+  panY = 0;
+  redraw();
+  updateDOMNodes();
+}
+
 // Fungsi ini berguna untuk mengganti model komunikasi aktif dan memperbarui tampilan
 export function setModel(model) {
   currentModel = model;
+  const container = document.getElementById('topology-nodes');
+  if (container) container.innerHTML = ''; // Kosongkan agar di-generate ulang dengan model baru
   redraw();
   updateDOMNodes();
 }
@@ -115,39 +183,51 @@ function updateDOMNodes() {
   const container = document.getElementById('topology-nodes');
   if (!container) return;
 
-  container.innerHTML = '';
-  const visible = VISIBLE_NODES[currentModel] || [];
+  // Terapkan transformasi pada container utama agar semua node ikut bergerak/zoom
+  container.style.transformOrigin = '0 0';
+  container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
 
-  visible.forEach(key => {
-    const def = NODE_DEFS[key];
-    const pos = resolvePos(def);
+  // Jika belum di-generate, buat elemennya (hanya dipanggil saat model berubah)
+  // Namun kita tetap panggil updateDOMNodes saat pan/zoom untuk mengupdate transform
+  if (container.children.length === 0) {
+    const visible = VISIBLE_NODES[currentModel] || [];
+    visible.forEach(key => {
+      const def = NODE_DEFS[key];
+      const pos = resolvePos(def);
 
-    const div = document.createElement('div');
-    div.className = 'node-element';
-    div.id        = `node-dom-${key}`;
-    div.style.left = `${pos.x}px`;
-    div.style.top  = `${pos.y}px`;
-    div.style.setProperty('--node-color', def.color);
+      const div = document.createElement('div');
+      div.className = 'node-element';
+      div.id        = `node-dom-${key}`;
+      div.style.left = `${pos.x}px`;
+      div.style.top  = `${pos.y}px`;
+      div.style.setProperty('--node-color', def.color);
 
-    div.innerHTML = `
-      <div class="node-icon-wrapper">
-        <i data-lucide="${def.icon}" class="node-icon"></i>
-      </div>
-      <div class="node-label">${def.label}</div>
-    `;
+      div.innerHTML = `
+        <div class="node-icon-wrapper">
+          <i data-lucide="${def.icon}" class="node-icon"></i>
+        </div>
+        <div class="node-label">${def.label}</div>
+      `;
 
-    container.appendChild(div);
-  });
-
-  // Minta Lucide untuk merender ikon yang baru saja ditambahkan
-  if (window.lucide) window.lucide.createIcons();
+      container.appendChild(div);
+    });
+    if (window.lucide) window.lucide.createIcons();
+  }
 }
 
 // Fungsi ini berguna untuk menghapus kanvas dan menggambar ulang garis serta paket
 function redraw() {
-  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); // Reset ke koordinat layar murni
+  ctx.clearRect(0, 0, w * DPR, h * DPR);
+  
+  // Terapkan transformasi tampilan (zoom & pan)
+  ctx.translate(panX, panY);
+  ctx.scale(scale, scale);
+
   drawEdges(EDGES[currentModel] || []);
   drawPackets();
+  ctx.restore();
 }
 
 // Fungsi ini berguna untuk menggambar garis putus-putus antar node di kanvas
