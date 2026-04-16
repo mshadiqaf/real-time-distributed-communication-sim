@@ -1,6 +1,6 @@
 # 🚀 Simulasi Interaktif Model Komunikasi Terdistribusi
 
-> **Studi Kasus Ride-Hailing** — Implementasi dan visualisasi interaktif dari 4 pola arsitektur komunikasi terdistribusi. Dibangun menggunakan antarmuka Glassmorphism (Vite + Vanilla JS), Backend Python/Flask, serta perantara *Message Broker* publik MQTT (EMQX) untuk mensimulasikan lingkungan terdistribusi skala nyata.
+> Visualisasi interaktif dari 4 pola arsitektur komunikasi terdistribusi dalam konteks nyata aplikasi **Ride-Hailing**. Dibangun dengan Vite + Vanilla JS di sisi frontend dan Python Flask di backend, terhubung ke broker MQTT publik (EMQX) untuk mensimulasikan komunikasi antar-service secara real-time.
 
 ---
 
@@ -16,19 +16,45 @@
 | **Mata Kuliah** | Sistem Paralel dan Terdistribusi |
 | **Kelas** | A |
 
-![App Screenshot](docs/screenshot.png)
+---
+
+## 💡 Tentang Proyek Ini
+
+Proyek ini mensimulasikan bagaimana sistem terdistribusi berkomunikasi di balik layar — sesuatu yang jarang terlihat secara langsung meski digunakan setiap hari. Dengan mengambil konteks **aplikasi ride-hailing** (seperti Gojek atau Grab), setiap model komunikasi dipetakan ke skenario yang familiar:
+
+| Model Komunikasi | Skenario | Endpoint / Event |
+|---|---|---|
+| **Request-Response (REST)** | Cek tarif perjalanan | `POST /api/req-res/find-price` |
+| **Publish-Subscribe (MQTT)** | Mencari pengemudi terdekat | `socket.emit('find_driver')` |
+| **Message Queue (MQTT)** | Proses pembayaran tagihan | `POST /api/queue/pay` |
+| **RPC** | Kalkulasi rute GPS | `POST /api/rpc/calculate-route` |
+
+Pilihan ride-hailing bukan sekadar ilustrasi — sistem ini memang menghadapi tantangan nyata dalam distributed computing: blocking vs non-blocking, konkurensi tinggi, dan pemisahan beban komputasi antar service.
 
 ---
 
-## 🎯 Relevansi Dunia Nyata & Skenario (Kriteria 8)
-Proyek ini mengadopsi studi kasus **Aplikasi Ride-Hailing (E-hailing)** untuk membuktikan bagaimana berbagai metode transmisi data bekerja dalam skala produksi. Sistem ride-hailing memiliki tantangan konkurensi ekstrem, perhitungan jarak lambat (berat komputasi), pemrosesan asinkron di gateway pembayaran, dan keandalan data lintas wilayah. Implementasi yang diangkat dalam proyek meliputi:
+## 🎬 Cara Kerja Simulasi
 
-| Model | Endpoint / Event | Tantangan Terdistribusi (Skenario Ride-Hailing) |
-|---|---|---|
-| **Request-Response (REST)** | `POST /req-res/find-price` | *Cek Tarif:* Aplikasi klien di-[blokir] sementara harus menunggu perhitungan tarif. Menunjukkan sisi rentan model *blocking* jika server lambat. |
-| **Publish-Subscribe (MQTT)** | Event WS `find_driver` | *Cari Pengemudi:* Disiarkan secara paralel ke _n_-pengemudi terdekat via broker (non-blocking). Menunjukkan efisiensi penyebaran event dinamis. |
-| **Message Queue (MQTT)** | `POST /queue/pay` | *Pembayaran:* Permintaan antre *(queue)* pada Broker, menghindari Server kelebihan muatan (*Server Overload*). Klien langsung bebas beraktivitas sementara proses diselesaikan perlahan di latar belakang. |
-| **RPC (Route Calc)** | `POST /rpc/calculate-route` | *Pencarian Rute GPS:* Fungsi komputasi rumit diserahkan ke *Remote Server* khusus algoritma berat yang memisahkan latensi *core* API dengan *service* sekunder (microservice). |
+Ketika simulasi dijalankan, Anda bisa melihat secara visual apa yang terjadi di dalam sistem:
+
+- **Paket data bergerak** antar node di kanvas, merepresentasikan aliran pesan
+- **Label status muncul** di atas setiap node saat sedang aktif memproses (misalnya: *"Kalkulasi Rute..."*, *"Masuk Antrean #2"*)
+- **Log pesan** mencatat setiap langkah komunikasi lengkap dengan timestamp
+- **Tabel Riwayat** otomatis mencatat hasil setiap simulasi — model, konfigurasi, dan durasi — sehingga bisa dibandingkan langsung antar model
+
+Jumlah pengemudi pada model Pub-Sub bisa diatur secara dinamis; node di kanvas akan bertambah atau berkurang secara real-time sesuai slider.
+
+---
+
+## ⚙️ Arsitektur Sistem
+
+Terdapat 5 komponen yang bekerja dalam topologi ini:
+
+1. **Client Node** — Merepresentasikan pengguna aplikasi. Berkomunikasi via HTTP REST dan WebSocket.
+2. **API Server (Flask)** — Menerima dan meneruskan permintaan ke service yang sesuai.
+3. **Message Broker (EMQX)** — Broker MQTT publik yang mengelola distribusi pesan pada model Pub-Sub dan Queue tanpa perlu infrastruktur sendiri.
+4. **Driver Nodes** — Subscribers yang menerima siaran order dari Broker secara paralel (fan-out).
+5. **RPC Service** — Layanan terpisah yang menangani komputasi rute, mewakili konsep microservice dengan delegasi komputasi.
 
 ---
 
@@ -36,47 +62,16 @@ Proyek ini mengadopsi studi kasus **Aplikasi Ride-Hailing (E-hailing)** untuk me
 
 | Layer | Teknologi | Keterangan |
 |---|---|---|
-| **Frontend Runtime** | [Vite](https://vitejs.dev/) v5 + Vanilla JS | *Build tool* modern, *Hot Module Replacement* (HMR), dan bundling produksi |
-| **Visualisasi** | HTML5 Canvas + DOM Overlay | Topologi digambar di kanvas; node ditampilkan sebagai elemen DOM untuk animasi CSS |
-| **Animasi** | [Anime.js](https://animejs.com/) v4 | Paket data bergerak di kanvas menggunakan keyframe berbasis JavaScript |
-| **Ikonografi** | [Lucide Icons](https://lucide.dev/) | SVG *icon library*, dirender sebagai DOM node sesuai jenis entitas jaringan |
-| **Tipografi** | [Google Fonts](https://fonts.google.com/) — Inter, Outfit, JetBrains Mono | Desain premium: Inter (body), Outfit (heading), JetBrains Mono (data/log) |
-| **Backend** | [Python](https://python.org) 3.12+ + [Flask](https://flask.palletsprojects.com/) | Framework web minimalis untuk REST endpoint & routing pesan |
-| **WebSocket** | [Flask-SocketIO](https://flask-socketio.readthedocs.io/) + [Socket.IO](https://socket.io/) | Komunikasi *duplex* real-time antara browser dan server |
-| **Message Broker** | [EMQX Public Broker](https://www.emqx.com/en/mqtt/public-mqtt5-broker) via [paho-mqtt](https://www.eclipse.org/paho/) | Broker MQTT publik untuk Pub-Sub & Message Queue tanpa infrastruktur tambahan |
-| **CORS & HTTP** | Flask-CORS | Mengizinkan *cross-origin request* dari port frontend Vite ke port backend Flask |
-| **Testing** | pytest | Unit test untuk logika *route*, kompatibel dengan `pytest.ini` |
-
----
-
-## ⚙️ Definisi Komponen & Logika Interaksi (Kriteria 2 & 3)
-
-Terdapat 5 komponen utama dalam topologi sistem ini yang menjamin pengiriman pesan antar-*service*:
-
-1. **Client Node (Pengguna):** Merupakan aplikasi awal (frontend mobile) yang merepresentasikan permohonan pengguna. Node ini berinteraksi melalui HTTP REST maupun WebSockets (Emisi data).
-2. **Server Utama (API Gateway):** Kumpulan antarmuka _(Blueprint)_ Python/Flask bertindak sebagai koordinator awal. Tugas server mengomunikasikan (routing) data dari klien ke tujuan komputasi terkait. 
-3. **Public Broker MQTT (EMQX):** Pengganti _queue in-memory_. Pada model Pub-Sub & antrean, sistem sepenuhnya terdesentralisasi karena event-event disebarkan/antre pada host eksternal `broker.emqx.io`. Hal ini mengamankan server dari kepenuhan paket di masa puncak *(spike)*.
-4. **Driver Nodes (Subscribers):** Layanan satelit atau pihak penerima pesan dari jalur Pub-Sub. Ketika klien mengajukan order, Broker mengeksekusi distribusi *fan-out* kepada _n_-driver terkait tanpa memberatkan Client.
-5. **RPC Server (Remote Procedure):** Menyederhanakan penempatan algoritma rute jarak dengan menerima delegasi hitung. Ia menjawab panggilan klien seolah ia berlokasi di dalam modul lokal.
-
----
-
-## 📈 Mekanisme Perbandingan (Kriteria 6)
-Dalam menjamin observasi komparatif yang sempurna (Metode A vs B), dasbor interaktif memiliki **Tabel Riwayat Eksperimen** interaktif dan metrik waktu nyata.
-
-**Cara Membandingkannya:**
-1. Anda dapat menjalankan operasi **Request-Response** dengan _latensi jaringan maksimal_. Tabel komparasi akan langsung menunjukkan durasi penuh di mana klien terbekukan.
-2. Bandingkan secara instan dengan metode **Message Queue** atau **Pub-Sub**. Walau penundaan waktu / iterasi di internal server/broker tinggi, pada tabel komparasi interaktif yang mencatat metrik "*Status*" dan "*Waktu Total*", Anda akan melihat bahwasanya interaksi klien tidak diblokir. 
-3. *Insight Komparatif:* Kombinasi ini memberikan pencerahan kepada penilai mengapa *Message Queue* memenangkan kestabilan untuk _payment_ (pembayaran), di mana *synchronous REST* lebih sesuai digabung untuk kalkulasi *real-time* seperti harga rute (yang nilainya diperlukan segera untuk lanjut urutan UX).
-
----
-
-## 🎨 Desain Representasi Visual (Kriteria 4 & 5)
-Sistem ini memfasilitasi _Discovery_ dan _Insight_ lewat modifikasi komponen estetis:
-
-- **Topologi Kanvas DOM (Glassmorphism):** Berbeda dengan visualisasi kaku kanvas Bitmap, node disajikan dalam wadah DOM transparan beranimasi _Pulse_.
-- **Sistem _Floating Interactive Badges_:** Pada setiap node yang mengkomunikasikan pesan dalam logika terkait terpasang stempel interaksi status transien (*"Kalkulasi Rute...", "Koor awal & tujuan..."*) sehingga evaluator mudah menerjemahkan apa yang terjadi di internal data tanpa sepenuhnya tunduk pada kode *log backend*.
-- **Konfigurasi Responsif:** _Slide range_ disesuaikan hanya apabila metode bersangkutan membutuhkannya — contohnya jumlah pengemudi yang *collapse* saat bukan uji coba Pub-Sub, menegaskan arsitektur terisolasi.
+| **Frontend Runtime** | [Vite](https://vitejs.dev/) v5 + Vanilla JS | *Build tool* modern dengan Hot Module Replacement |
+| **Visualisasi** | HTML5 Canvas + DOM Overlay | Topologi digambar di kanvas; node sebagai elemen DOM |
+| **Animasi** | [Anime.js](https://animejs.com/) v4 | Paket data bergerak menggunakan keyframe JS |
+| **Ikonografi** | [Lucide Icons](https://lucide.dev/) | SVG icon library per jenis entitas node |
+| **Tipografi** | [Google Fonts](https://fonts.google.com/) — Inter, Outfit, JetBrains Mono | Inter (body), Outfit (heading), JetBrains Mono (log) |
+| **Backend** | [Python](https://python.org) 3.12+ + [Flask](https://flask.palletsprojects.com/) | REST endpoint dan routing pesan |
+| **WebSocket** | [Flask-SocketIO](https://flask-socketio.readthedocs.io/) + [Socket.IO](https://socket.io/) | Komunikasi duplex real-time |
+| **Message Broker** | [EMQX Public Broker](https://www.emqx.com/en/mqtt/public-mqtt5-broker) via [paho-mqtt](https://www.eclipse.org/paho/) | Broker MQTT publik tanpa infrastruktur tambahan |
+| **CORS** | Flask-CORS | Mengizinkan request dari port frontend ke backend |
+| **Testing** | pytest | Unit test untuk logika route |
 
 ---
 
@@ -84,30 +79,32 @@ Sistem ini memfasilitasi _Discovery_ dan _Insight_ lewat modifikasi komponen est
 
 ```text
 real-time-distributed-communication-sim/
+├── start.ps1                  # Skrip startup satu perintah (Windows)
 ├── backend/
 │   ├── app/
-│   │   ├── config.py          # Konfigurasi default (latensi, jumlah pengemudi)
-│   │   ├── mqtt_client.py     # Integrasi klien MQTT (paho-mqtt)
-│   │   ├── routes/            # Blueprint REST Endpoint & Event Handlers
-│   │   └── services/          # Logika bisnis RPC dll.
-│   └── run.py                 # Titik masuk backend
+│   │   ├── config.py          # Konfigurasi default aplikasi
+│   │   ├── mqtt_client.py     # Manajemen koneksi MQTT (Singleton)
+│   │   ├── routes/            # Endpoint REST & event handler SocketIO
+│   │   └── services/          # Logika bisnis (RouteService untuk RPC)
+│   ├── requirements.txt
+│   └── run.py                 # Entry point backend
 └── frontend/
-    ├── index.html             # UI Dashboard, Tabel Perbandingan, & DOM Elements
+    ├── index.html             # Struktur UI dan panel kontrol
     └── src/
-        ├── style.css          # Desain Dark Glassmorphism 
-        ├── canvas.js          # Kanvas topologi + setNodeStatus() 
-        └── main.js            # Orkestrasi komparasi metrik & interaksi
+        ├── style.css          # Desain Dark Glassmorphism
+        ├── canvas.js          # Rendering topologi dan animasi paket
+        └── main.js            # Orkestrasi simulasi, metrik, dan log
 ```
 
 ---
 
-## 🚀 Cara Menjalankan Project
+## 🚀 Cara Menjalankan
 
 ### Kebutuhan Sistem
 - Python 3.12+
 - Node.js 18+
 
-### ⚡ Cara Cepat (Rekomendasi — Windows)
+### ⚡ Cara Cepat (Windows)
 
 Cukup satu perintah untuk menjalankan backend dan frontend sekaligus:
 
@@ -126,7 +123,7 @@ Script ini otomatis membuka dua terminal terpisah:
 
 ---
 
-### 🔧 Cara Manual (Opsional)
+### 🔧 Cara Manual
 
 Jika ingin menjalankan masing-masing server secara terpisah:
 
