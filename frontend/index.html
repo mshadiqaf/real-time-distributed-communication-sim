@@ -1,13 +1,84 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Distributed Comm Sim — Ride-Hailing</title>
+    <meta name="description" content="Interactive simulation of 4 distributed communication models using a Ride-Hailing case study: Request-Response, Pub-Sub, Message Queue, and RPC." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <header id="app-header">
+      <div class="header-inner">
+        <div class="header-brand">
+          <span class="brand-icon">🚀</span>
+          <div>
+            <h1 class="brand-title">Distributed Comm Sim</h1>
+            <p class="brand-subtitle">Ride-Hailing Case Study</p>
+          </div>
+        </div>
+        <div id="connection-badge" class="badge badge--disconnected">⚫ Disconnected</div>
+      </div>
+    </header>
+
+    <main id="app-main">
+      <!-- Canvas section -->
+      <section id="canvas-section">
+        <canvas id="topology-canvas"></canvas>
+        <div id="canvas-overlay-label">Topology View</div>
+      </section>
+
+      <!-- Right sidebar -->
+      <aside id="sidebar">
+        <!-- Control Panel -->
+        <div class="panel" id="control-panel">
+          <h2 class="panel-title">⚙️ Control Panel</h2>
+
+          <div class="form-group">
+            <label class="form-label" for="model-select">Communication Model</label>
+            <select id="model-select" class="form-select">
+              <option value="req-res">🔄 Request-Response (REST)</option>
+              <option value="pub-sub">📡 Publish-Subscribe (WebSocket)</option>
+              <option value="queue">📬 Message Queue</option>
+              <option value="rpc">🔗 RPC (Route Calculation)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="latency-slider">
+              Network Latency: <span id="latency-val" class="form-value">500</span> ms
+            </label>
+            <input id="latency-slider" type="range" min="0" max="2000" value="500" class="form-range" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="driver-slider">
+              Driver Count: <span id="driver-val" class="form-value">3</span>
+            </label>
+            <input id="driver-slider" type="range" min="1" max="10" value="3" class="form-range" />
+          </div>
+
+          <button id="trigger-btn" class="btn btn--primary">
+            <span id="btn-text">🚗 Pesan Ride</span>
+            <span id="btn-spinner" class="spinner hidden"></span>
+          </button>
+
+          <!-- Model description -->
+          <div id="model-desc" class="model-desc"></div>
+        </div>
+
+        <!-- Metrics + Log -->
+        <div class="panel panel--grow" id="metrics-panel">
+          <h2 class="panel-title">📊 Metrics & Log</h2>
+          <div id="metrics-widget" class="metrics-grid"></div>
+          <div class="log-header">Sequence Log</div>
+          <div id="sequence-log" class="sequence-log"></div>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>
