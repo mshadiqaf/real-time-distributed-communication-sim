@@ -23,7 +23,7 @@ const modelDesc     = document.getElementById('model-desc');
 const sequenceLog   = document.getElementById('sequence-log');
 const metricsWidget = document.getElementById('metrics-widget');
 const appMain       = document.getElementById('app-main');
-const compTbody     = document.getElementById('comparison-tbody');
+const sidebar       = document.getElementById('sidebar');
 
 // Informasi tiap model komunikasi: label tombol, deskripsi skenario, dan tipe log
 const MODEL_META = {
@@ -60,7 +60,6 @@ const MODEL_META = {
 // State yang berubah selama aplikasi berjalan
 let metrics = { requests: 0, latencyAvg: 0, latencyTotal: 0, events: 0 };
 let isBusy  = false;           // Mencegah klik ganda saat simulasi sedang berjalan
-let comparisonHistory = [];    // Riwayat simulasi untuk tabel perbandingan
 
 // Tipe log yang valid dan definisi kartu metrik yang ditampilkan
 const LOG_TYPES = { send: 'send', recv: 'recv', queue: 'queue', error: 'error', info: 'info' };
@@ -197,7 +196,6 @@ async function runSimulation() {
     updateMetrics();
     setBusy(false);
     log(`■ Selesai dalam ${elapsed}ms`, 'info');
-    addComparisonEntry(model, latency, drivers, elapsed, 'Selesai');
   }
 }
 
@@ -323,9 +321,10 @@ function log(msg, type = 'info') {
   content.className = 'log-content';
   content.innerHTML = msg; // Pakai innerHTML supaya tag <strong> bisa dirender
 
-  div.appendChild(meta);
   div.appendChild(content);
   sequenceLog.appendChild(div);
+  
+  // Auto-scroll the Log container to the bottom so newest logs are visible
   sequenceLog.scrollTop = sequenceLog.scrollHeight;
 }
 
@@ -359,33 +358,6 @@ function updateMetrics() {
     card.classList.add('flash');
     setTimeout(() => card.classList.remove('flash'), 400);
   });
-}
-
-// Fungsi ini berguna untuk mencatat hasil simulasi ke tabel riwayat perbandingan
-function addComparisonEntry(model, latency, drivers, elapsed, status) {
-  const config = `${latency}ms / ${model === 'pub-sub' ? `${drivers}d` : '-'}`;
-
-  // Taruh di depan supaya yang terbaru selalu muncul di baris pertama
-  comparisonHistory.unshift({ model: MODEL_META[model]?.label || model, config, time: elapsed, status });
-
-  // Batasi riwayat di 20 entri saja
-  if (comparisonHistory.length > 20) comparisonHistory.pop();
-
-  if (compTbody) {
-    compTbody.innerHTML = '';
-    comparisonHistory.forEach(entry => {
-      const tr = document.createElement('tr');
-      tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-      tr.style.animation    = 'ticketIn 0.3s ease-out forwards';
-      tr.innerHTML = `
-        <td style="padding: 8px; color: #fff;">${entry.model}</td>
-        <td style="padding: 8px; color: #9CA3AF;">${entry.config}</td>
-        <td style="padding: 8px; color: #F59E0B;">${entry.time}ms</td>
-        <td style="padding: 8px; color: #10B981;">${entry.status}</td>
-      `;
-      compTbody.appendChild(tr);
-    });
-  }
 }
 
 renderMetrics();

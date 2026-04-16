@@ -145,6 +145,18 @@ strong, b { font-weight: 600; color: #fff; }
   text-align: center; color: var(--text-secondary);
   background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 4px;
   white-space: pre-line; line-height: 1.2;
+  transition: all var(--trans-fast);
+}
+
+/* Compact style for high node counts */
+.node--compact .node-label {
+  margin-top: 4px;
+  font-size: 10px;
+  padding: 2px 6px;
+}
+.node--compact .node-icon-wrapper {
+  width: 48px;
+  height: 48px;
 }
 .node-element.pulse .node-icon-wrapper {
   transform: scale(1.15);
@@ -187,7 +199,8 @@ strong, b { font-weight: 600; color: #fff; }
   background: var(--bg-panel);
   border-left: 1px solid var(--border);
   box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-  overflow: hidden; /* Prevent sidebar itself from scrolling to maintain layout */
+  overflow-y: auto;
+  overflow-x: hidden;
   z-index: 10;
 }
 #sidebar::-webkit-scrollbar { width: 8px; }
@@ -203,8 +216,9 @@ strong, b { font-weight: 600; color: #fff; }
 .panel--grow { 
   display: flex; flex-direction: column;
   border-bottom: none;
-  flex: 1; /* Occupy remaining space */
-  overflow: hidden; /* Contain the scrollable log inside */
+  min-height: 500px;
+  position: relative;
+  overflow: hidden; /* Prevent log entries from bleeding out during animation */
 }
 .panel-title { 
   font-family: 'Outfit', sans-serif;
@@ -317,9 +331,10 @@ strong, b { font-weight: 600; color: #fff; }
 }
 .sequence-log {
   flex: 1; 
+  max-height: 450px; 
   overflow-y: auto; 
   padding-right: 8px; 
-  /* Remove min-height to allow it to shrink if needed */
+  min-height: 250px;
 }
 .sequence-log::-webkit-scrollbar { width: 6px; }
 .sequence-log::-webkit-scrollbar-track { background: transparent; }
@@ -413,9 +428,13 @@ strong, b { font-weight: 600; color: #fff; }
 
 /* IDENTITY PANEL STYLES */
 #identity-panel {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-panel); 
   border-top: 1px solid var(--border);
-  margin-top: auto; /* Push to bottom of sidebar */
+  margin-top: auto; 
+  position: relative;
+  z-index: 5;
+  padding-top: var(--space-4);
+  box-shadow: 0 -10px 20px rgba(0,0,0,0.2);
 }
 .identity-content {
   display: flex;

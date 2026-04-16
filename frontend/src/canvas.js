@@ -129,17 +129,18 @@ export function setDriverCount(count) {
   EDGES['pub-sub']         = [['client', 'broker']];
   VISIBLE_NODES['pub-sub'] = ['client', 'broker'];
 
-  // Bagi posisi vertikal pengemudi secara merata di 80% tinggi kanvas
-  const range  = 0.8;
+  // Bagi posisi vertikal pengemudi secara merata di 90% tinggi kanvas
+  const range  = 0.9;
   const stepY  = range / (num + 1);
-  const startY = 0.1 + stepY;
+  const startY = 0.05 + stepY;
 
   for (let i = 1; i <= num; i++) {
     const dKey = `d${i}`;
     NODE_DEFS[dKey] = {
       label: `Pengemudi ${i}`,
       color: '#8b5cf6',
-      x: 0.82,
+      // Zig-zag horizontal: selang-seling antara 0.86 dan 0.78
+      x: i % 2 === 0 ? 0.86 : 0.78,
       y: startY + (i - 1) * stepY,
       icon: 'car',
     };
@@ -196,8 +197,7 @@ function updateDOMNodes() {
     // Jika elemen belum ada, buat baru
     if (!div) {
       div = document.createElement('div');
-      div.className = 'node-element';
-      div.id        = `node-dom-${key}`;
+      div.id = `node-dom-${key}`;
       div.innerHTML = `
         <div class="node-icon-wrapper">
           <i data-lucide="${def.icon}" class="node-icon"></i>
@@ -207,6 +207,10 @@ function updateDOMNodes() {
       container.appendChild(div);
       if (window.lucide) window.lucide.createIcons();
     }
+
+    // Terapkan class node--compact jika jumlah driver aktif banyak untuk menghemat spasi
+    const driverCount = visible.filter(k => k.startsWith('d')).length;
+    div.className = `node-element ${driverCount > 7 ? 'node--compact' : ''}`;
 
     // Selalu perbarui posisi dasar (left/top) agar responsif terhadap ukuran layar/parent
     div.style.left = `${pos.x}px`;
