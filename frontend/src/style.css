@@ -407,3 +407,42 @@ strong, b { font-weight: 600; color: #fff; }
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* IDENTITY PANEL STYLES */
+#identity-panel {
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid var(--border);
+  margin-top: auto; /* Push to bottom of sidebar */
+}
+.identity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.identity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-sm);
+  transition: all var(--trans-fast);
+}
+.identity-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border);
+  transform: translateX(2px);
+}
+.identity-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.identity-val {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
