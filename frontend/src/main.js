@@ -178,7 +178,7 @@ async function runSimulation() {
 
 // ─── req-res ──────────────────────────────────────────────────────────────────
 async function runReqRes(latency) {
-  log('→ POST /api/req-res/find-price', 'send');
+  log('<strong>→ POST /api/req-res/find-price</strong>', 'send');
   pulseNode('client');
   animatePacket('client', 'server', '#3b82f6', Math.max(300, latency * 0.6));
 
@@ -186,12 +186,12 @@ async function runReqRes(latency) {
   animatePacket('server', 'client', '#3b82f6', Math.max(300, latency * 0.6));
   pulseNode('server');
 
-  log(`← harga: Rp ${res.price?.toLocaleString('id-ID')} (${res.response_time_ms}ms)`, 'recv');
+  log(`<strong>← HARGA CALC</strong> Rp ${res.price?.toLocaleString('id-ID')} (${res.response_time_ms}ms)`, 'recv');
 }
 
 // ─── pub-sub ──────────────────────────────────────────────────────────────────
 async function runPubSub(latency, drivers) {
-  log(`→ emit find_driver (drivers=${drivers})`, 'send');
+  log(`<strong>→ EMIT find_driver</strong> (drivers=${drivers})`, 'send');
   pulseNode('client');
   animatePacket('client', 'broker', '#22c55e', 300);
   socket.emit('find_driver', {
@@ -207,7 +207,7 @@ async function runPubSub(latency, drivers) {
 
 // ─── queue ────────────────────────────────────────────────────────────────────
 async function runQueue(latency) {
-  log('→ POST /api/queue/pay', 'queue');
+  log('<strong>→ POST /api/queue/pay</strong>', 'queue');
   pulseNode('client');
   animatePacket('client', 'broker', '#eab308', 300);
 
@@ -224,7 +224,7 @@ async function runQueue(latency) {
 
 // ─── rpc ──────────────────────────────────────────────────────────────────────
 async function runRpc(latency) {
-  log('→ POST /api/rpc/calculate-route', 'send');
+  log('<strong>→ POST /api/rpc/calculate-route</strong>', 'send');
   pulseNode('client');
   animatePacket('client', 'rpc', '#8b5cf6', Math.max(200, latency * 0.4));
 
@@ -283,7 +283,18 @@ function log(msg, type = 'info') {
   const ts  = new Date().toISOString().slice(11, 23);
   const div = document.createElement('div');
   div.className = `log-entry log-entry--${LOG_TYPES[type] ?? 'info'}`;
-  div.textContent = `${ts}  ${msg}`;
+  
+  const meta = document.createElement('div');
+  meta.className = 'log-meta';
+  meta.innerHTML = `<span class="log-time">${ts}</span>`;
+  
+  const content = document.createElement('div');
+  content.className = 'log-content';
+  content.innerHTML = msg; // Allows us to use strong tags
+
+  div.appendChild(meta);
+  div.appendChild(content);
+
   sequenceLog.appendChild(div);
   sequenceLog.scrollTop = sequenceLog.scrollHeight;
 }

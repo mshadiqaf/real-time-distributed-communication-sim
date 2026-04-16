@@ -119,30 +119,41 @@ function drawNodes(visible) {
     const { x, y } = resolvePos(def);
     const col = def.color;
 
-    // Glow
-    const grd = ctx.createRadialGradient(x, y, 0, x, y, NODE_R * 2.5);
-    grd.addColorStop(0, col + '30');
-    grd.addColorStop(1, 'transparent');
-    ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(x, y, NODE_R * 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    // Sharp architectural drop-shadow
+    ctx.shadowColor = 'rgba(26, 26, 26, 0.2)';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
 
-    // Ring
-    ctx.strokeStyle = col + 'aa';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(x, y, NODE_R, 0, Math.PI * 2); ctx.stroke();
-
-    // Fill
+    // Outer Crisp Border
     ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(x, y, NODE_R - 1, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#1a1a1a'; // Stark black
+    ctx.lineWidth = 2;
+    ctx.beginPath(); 
+    ctx.arc(x, y, NODE_R, 0, Math.PI * 2); 
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
 
-    // Label
+    // Inner Colored Dot
     ctx.fillStyle = col;
-    ctx.font = `600 11px Geist, sans-serif`;
+    ctx.beginPath(); 
+    ctx.arc(x, y, NODE_R - 12, 0, Math.PI * 2); 
+    ctx.fill();
+
+    // Label (Monospace)
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = `700 10px 'JetBrains Mono', monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const lines = def.label.split('\n');
-    const lineH = 14;
-    const offsetY = -(lines.length - 1) * lineH / 2;
-    lines.forEach((line, i) => ctx.fillText(line, x, y + offsetY + i * lineH));
+    const lineH = 12;
+    const offsetY = NODE_R + 14; 
+    
+    lines.forEach((line, i) => {
+      ctx.fillText(line, x, y + offsetY + i * lineH);
+    });
   });
 }
 

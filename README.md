@@ -48,7 +48,7 @@ real-time-distributed-communication-sim/
 
 ---
 
-## ⚙️ Persiapan & Cara Menjalankan
+## Cara Menjalankan Project Ini
 
 ### Kebutuhan Sistem
 - Python 3.12+ (Mendukung 3.14)
@@ -79,19 +79,6 @@ npm install
 npm run dev
 # Server grafis Vite akan berjalan pada http://localhost:5173
 ```
-
----
-
-## 🧪 Menjalankan Pengujian (Tests)
-
-Backend dirancang agar tangguh dan mudah diuji meskipun terintegrasi penuh dengan MQTT dan SocketIO. Pada skenario testing secara default, backend akan mensimulasikan lingkungan MQTT lokal otomatis agar pipeline pengujian (CI/CD) tetap stabil tanpa memerlukan internet.
-
-```bash
-cd backend
-.venv\Scripts\python.exe -m pytest tests/ -v
-```
-
-**Hasil tes:** 9/9 berhasil selesai tanpa kendala ✅
 
 ---
 
