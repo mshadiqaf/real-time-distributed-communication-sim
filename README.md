@@ -1,161 +1,148 @@
-# 🚀 Real-Time Distributed Communication Simulation
+# 🚀 Simulasi Komunikasi Terdistribusi
 
-> **Ride-Hailing Case Study** — Interactive visualization of 4 distributed communication patterns using a Python/Flask backend and a Vite vanilla JS frontend.
+> **Studi Kasus Ride-Hailing** — Visualisasi interaktif dari 4 pola komunikasi terdistribusi menggunakan backend Python/Flask, broker MQTT publik (EMQX), dan frontend vanilla JS dengan Vite.
 
 ![App Screenshot](docs/screenshot.png)
 
 ---
 
-## 🎯 Communication Models
+## 🎯 Model Komunikasi
 
-| Model | Endpoint / Event | Ride-Hailing Analogy |
+| Model | Endpoint / Event | Analogi pada Ride-Hailing |
 |---|---|---|
-| **Request-Response** | `POST /api/req-res/find-price` | Rider requests fare — waits for reply |
-| **Publish-Subscribe** | WS event `find_driver` | Order broadcast to all nearby drivers |
-| **Message Queue** | `POST /api/queue/pay` | Payment enqueued, processed async |
-| **RPC** | `POST /api/rpc/calculate-route` | Remote route calculation returned |
+| **Request-Response** | `POST /api/req-res/find-price` | Pengguna meminta tarif — menunggu balasan langsung (Blocking) |
+| **Publish-Subscribe** | Event WS `find_driver` / MQTT | Pesanan disiarkan ke semua pengemudi terdekat secara paralel |
+| **Message Queue** | `POST /api/queue/pay` / MQTT | Pembayaran masuk antrean, diproses secara asinkron (Workers) |
+| **RPC** | `POST /api/rpc/calculate-route` | Perhitungan rute dieksekusi dari fungsi jarak jauh |
 
 ---
 
-## 🗂 Project Structure
+## 🗂 Struktur Proyek
 
-```
+```text
 real-time-distributed-communication-sim/
 ├── backend/
 │   ├── app/
-│   │   ├── __init__.py        # Flask app factory (SocketIO, CORS, blueprints)
-│   │   ├── config.py          # DefaultConfig (latency, driver count)
+│   │   ├── __init__.py        # Pengaturan awal Flask (SocketIO, MQTT, Blueprint)
+│   │   ├── config.py          # Konfigurasi default (latensi, jumlah pengemudi)
+│   │   ├── mqtt_client.py     # Integrasi klien MQTT (paho-mqtt)
 │   │   ├── routes/
-│   │   │   ├── req_res.py     # REST blocking endpoint
-│   │   │   ├── pub_sub.py     # SocketIO event handler
-│   │   │   ├── message_queue.py # Async queue + daemon worker
-│   │   │   └── rpc.py         # RPC wrapper blueprint
+│   │   │   ├── req_res.py     # Endpoint REST (blocking)
+│   │   │   ├── pub_sub.py     # Penanganan event Publish-Subscribe (via MQTT)
+│   │   │   ├── message_queue.py # Message Queue asinkron (via MQTT)
+│   │   │   └── rpc.py         # Blueprint wrapper RPC
 │   │   └── services/
-│   │       └── route_service.py  # RouteService.calculate (RPC target)
-│   ├── tests/
-│   │   ├── conftest.py        # Session-scoped fixtures (shared socketio)
-│   │   ├── test_health.py
-│   │   ├── test_req_res.py
-│   │   ├── test_pub_sub.py
-│   │   ├── test_message_queue.py
-│   │   └── test_rpc.py
-│   ├── run.py
-│   ├── requirements.txt
-│   └── pytest.ini
+│   │       └── route_service.py # Logika perhitungan rute (target RPC)
+│   ├── tests/                 # Kumpulan unit test
+│   ├── run.py                 # Titik masuk backend
+│   ├── requirements.txt       # Daftar dependensi Python
+│   └── pytest.ini             # Konfigurasi pengujian
 ├── frontend/
-│   ├── index.html             # Semantic HTML layout
+│   ├── index.html             # Tata letak semantik HTML & Lucide Icons
 │   └── src/
-│       ├── style.css          # Dark glassmorphism design system
-│       ├── canvas.js          # Canvas topology + anime.js animations
-│       └── main.js            # UI orchestrator + SocketIO + API calls
-└── docs/
-    └── plans/
-        └── 2026-04-16-distributed-comm-sim.md
+│       ├── style.css          # Sistem desain Light style + Glassmorphism
+│       ├── canvas.js          # Kanvas topologi + animasi anime.js
+│       └── main.js            # Orkestrasi UI + SocketIO + panggilan API
+└── docs/                      # Dokumentasi
 ```
 
 ---
 
-## ⚙️ Quick Start
+## ⚙️ Persiapan & Cara Menjalankan
 
-### Prerequisites
-- Python 3.12+ (3.14 supported)
+### Kebutuhan Sistem
+- Python 3.12+ (Mendukung 3.14)
 - Node.js 18+
 
-### Backend
+### Menjalankan Backend
 
 ```bash
 cd backend
 python -m venv .venv
-# Windows:
+
+# Untuk Windows:
 .venv\Scripts\activate
-# macOS/Linux:
+# Untuk macOS/Linux:
 source .venv/bin/activate
 
 pip install -r requirements.txt
 python run.py
-# Flask + SocketIO running on http://localhost:5000
+# Server Flask, SocketIO, dan klien MQTT akan berjalan
+# Mengaktifkan endpoint API pada http://localhost:5000
 ```
 
-### Frontend
+### Menjalankan Frontend
 
 ```bash
 cd frontend
 npm install
 npm run dev
-# Vite dev server on http://localhost:5173
+# Server grafis Vite akan berjalan pada http://localhost:5173
 ```
 
 ---
 
-## 🧪 Running Tests
+## 🧪 Menjalankan Pengujian (Tests)
+
+Backend dirancang agar tangguh dan mudah diuji meskipun terintegrasi penuh dengan MQTT dan SocketIO. Pada skenario testing secara default, backend akan mensimulasikan lingkungan MQTT lokal otomatis agar pipeline pengujian (CI/CD) tetap stabil tanpa memerlukan internet.
 
 ```bash
 cd backend
 .venv\Scripts\python.exe -m pytest tests/ -v
 ```
 
-**Test results:** 9/9 passing ✅
+**Hasil tes:** 9/9 berhasil selesai tanpa kendala ✅
 
-```
-tests/test_health.py::test_health_check                    PASSED
-tests/test_message_queue.py::test_enqueue_returns_202      PASSED
-tests/test_message_queue.py::test_multiple_requests_dont_crash PASSED
-tests/test_pub_sub.py::test_find_driver_broadcasts         PASSED
-tests/test_pub_sub.py::test_driver_found_emitted_per_driver PASSED
-tests/test_req_res.py::test_find_price_returns_price       PASSED
-tests/test_req_res.py::test_find_price_blocking_delay      PASSED
-tests/test_rpc.py::test_route_service_returns_distance_and_eta PASSED
-tests/test_rpc.py::test_rpc_endpoint                       PASSED
+---
+
+## 🏗 Arsitektur Sistem
+
+```text
+┌────────────────────────────────────────────────────────┐
+│                     Browser (Vite)                     │
+│  Kanvas ←── anime.js ──── Node Topologi Visual         │
+│  Sidebar: Kendali │ Metrik │ Log Urutan Pesan          │
+└──────┬──────────────────────────────────────┬──────────┘
+       │ HTTP (fetch)                         │ WebSocket
+       ▼                                      ▼
+┌────────────────────────────────────────────────────────┐
+│                Flask + Flask-SocketIO                  │
+│  /api/req-res/find-price  →  REST sinkron (Blocking)   │
+│  /api/rpc/calculate-route →  RPC Method Call           │
+└──────┬──────────────────────────────────────┬──────────┘
+       │ Publish / Subscribe via MQTT Broker  │
+       ▼                                      ▼
+┌────────────────────────────────────────────────────────┐
+│            Public MQTT Broker (broker.emqx.io)         │
+│ Topik:                                                 │
+│  - ride/order      →  Ditangani pekerja Pub-Sub        │
+│  - ride/payment    →  Ditangani pekerja Message Queue  │
+└────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🏗 Architecture
+## 🎨 Fitur Antarmuka Pengguna (UI)
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      Browser (Vite)                     │
-│  Canvas ←── anime.js ──── Topology Nodes                │
-│  Sidebar: Controls │ Metrics │ Sequence Log             │
-└──────┬──────────────────────────────────────┬───────────┘
-       │ HTTP (fetch)                          │ WebSocket
-       ▼                                       ▼
-┌─────────────────────────────────────────────────────────┐
-│               Flask + Flask-SocketIO                    │
-│  /api/req-res/find-price  →  blocking REST              │
-│  /api/queue/pay           →  enqueue → daemon worker    │
-│  /api/rpc/calculate-route →  RouteService.calculate()   │
-│  WS: find_driver          →  broadcast order_broadcast  │
-│       ↓ per-driver         →  emit driver_found         │
-└─────────────────────────────────────────────────────────┘
-```
+- **Desain Cerah & Elegan**: Mengusung pendekatan *light theme* dengan panel tembus pandang khas *glassmorphism* modern.
+- **Tipografi Profesional**: Menggunakan keluarga font **Geist** untuk keterbacaan umum yang jernih dan **JetBrains Mono** untuk angka, log, dan informasi presisi.
+- **Simbolisasi Lucide**: Ikonografi mulus yang dapat diskalakan pada bilah dan indikator UI.
+- **Kanvas Interaktif**: Jaringan setiap node merepresentasikan perangkat, dilengkapi latar bergaris *(grid)*, garis koneksi dinamis, dan efek pijar (glow) ketika aktif.
+- **Animasi Paket Real-time**: Paket visualisasi komunikasi data bergerak leluasa di kanvas menggunakan tenaga **anime.js v4**.
+- **Indikator Respons**: Pengkodean warna pada komunikasi jaringan — Hijau (Pub-Sub), Biru (Request-Response), Kuning (Metode Antrean), Ungu (RPC).
+- **Pemantauan Metrik Langsung**: Menampilkan jumlah total *Requests*, Rata-rata *Round-Trip Time* (RTT), dan total *Event WebSocket* (Soket Terbuka) seketika.
+- **Log Runtut Terpusat (Sequence Logs)**: Menyediakan jurnal stempel waktu untuk mencatat laju setiap pesan pengiriman.
 
 ---
 
-## 🎨 UI Features
+## 📝 Keputusan Sistem & Desain Terbaru
 
-- **Dark glassmorphism** design with Inter + JetBrains Mono fonts
-- **Canvas topology** with grid background, dashed edges, glowing nodes
-- **Animated packets** (anime.js v4) traveling between nodes in real-time
-- **Per-model accent colours** — blue (req-res), green (pub-sub), amber (queue), purple (rpc)
-- **Live metrics** — Requests, Avg RTT, WS Events with flash animation
-- **SocketIO connection badge** — live green/grey indicator
-- **Sequence log** — timestamped, colour-coded log of all events
-
----
-
-## 📝 Design Decisions
-
-| Decision | Rationale |
+| Perubahan | Objektif dan Penjelasan |
 |---|---|
-| `async_mode="threading"` | eventlet incompatible with Python 3.14 |
-| Session-scoped pytest fixtures | Shared SocketIO singleton — multiple `init_app()` calls reset queue |
-| anime.js v4 named exports | v4 removed default export; use `import { animate }` |
-| Dual `emit()` + `socketio.emit()` in pub_sub | Direct emit for test client; global emit for production broadcasts |
-| Flask app factory pattern | Enables testable config overrides per test |
+| **Integrasi Message Broker MQTT Eksternal (EMQX)** | Menghapus arsitektur Queue *in-memory* bawaan Flask dan menggantinya dengan kolaborasi penuh terhadap *Message Broker* eksternal publik secara terdistribusi penuh melalui klien **paho-mqtt**, guna mendemonstrasikan aliran keakuratan asinkron tanpa menuntut pengujian manual maupun instalasi lingkungan virtual Docker tambahan. |
+| **Penyelarasan Bahasa UX Terlokalisasi** | Digunakan untuk menjembatani wawasan spesifik mahasiswa pada kurikulum kuliah *Sistem Paralel dan Terdistribusi*, menerjemahkan segala teks pada antarmuka *Frontend* secara menyeluruh agar transparan dan dimengerti. |
 
 ---
 
-## 📄 License
-
-MIT
+## 📄 Lisensi
+[MIT License](LICENSE)

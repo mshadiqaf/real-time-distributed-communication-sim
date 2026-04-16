@@ -12,13 +12,13 @@ const ctx = canvas.getContext('2d');
 
 // ─── Node definitions (relative 0–1 coords, resolved on resize) ─────────────
 const NODE_DEFS = {
-  client: { label: 'Client\n(Rider)',   color: '#58a6ff', x: 0.18, y: 0.50 },
-  server: { label: 'API Server',        color: '#3fb950', x: 0.50, y: 0.28 },
-  broker: { label: 'Message Broker',   color: '#d29922', x: 0.50, y: 0.72 },
-  rpc:    { label: 'RPC Service',       color: '#a371f7', x: 0.50, y: 0.50 },
-  d1:     { label: 'Driver 1',          color: '#a371f7', x: 0.82, y: 0.22 },
-  d2:     { label: 'Driver 2',          color: '#a371f7', x: 0.82, y: 0.50 },
-  d3:     { label: 'Driver 3',          color: '#a371f7', x: 0.82, y: 0.78 },
+  client: { label: 'Klien\n(Pengguna)',   color: '#3b82f6', x: 0.18, y: 0.50 },
+  server: { label: 'Server API',        color: '#22c55e', x: 0.50, y: 0.28 },
+  broker: { label: 'Message Broker',   color: '#eab308', x: 0.50, y: 0.72 },
+  rpc:    { label: 'Layanan RPC',       color: '#8b5cf6', x: 0.50, y: 0.50 },
+  d1:     { label: 'Pengemudi 1',          color: '#8b5cf6', x: 0.82, y: 0.22 },
+  d2:     { label: 'Pengemudi 2',          color: '#8b5cf6', x: 0.82, y: 0.50 },
+  d3:     { label: 'Pengemudi 3',          color: '#8b5cf6', x: 0.82, y: 0.78 },
 };
 
 // Edges depend on model
@@ -131,12 +131,12 @@ function drawNodes(visible) {
     ctx.beginPath(); ctx.arc(x, y, NODE_R, 0, Math.PI * 2); ctx.stroke();
 
     // Fill
-    ctx.fillStyle = '#0d1117';
+    ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.arc(x, y, NODE_R - 1, 0, Math.PI * 2); ctx.fill();
 
     // Label
     ctx.fillStyle = col;
-    ctx.font = `600 11px Inter, sans-serif`;
+    ctx.font = `600 11px Geist, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const lines = def.label.split('\n');

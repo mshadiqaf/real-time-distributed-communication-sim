@@ -1,25 +1,25 @@
 /* ============================================================
    DESIGN SYSTEM — Distributed Comm Sim
-   Dark glassmorphism, Inter + JetBrains Mono
+   Light glassmorphism, Geist + JetBrains Mono
    ============================================================ */
 
 :root {
-  --bg-base:       #0d1117;
-  --bg-surface:    #161b22;
-  --bg-glass:      rgba(22, 27, 34, 0.72);
-  --bg-glass-hi:   rgba(255, 255, 255, 0.04);
+  --bg-base:       #f8fafc;
+  --bg-surface:    #ffffff;
+  --bg-glass:      rgba(255, 255, 255, 0.85);
+  --bg-glass-hi:   rgba(255, 255, 255, 1);
 
-  --border:        rgba(255, 255, 255, 0.08);
-  --border-hi:     rgba(255, 255, 255, 0.18);
+  --border:        #e2e8f0;
+  --border-hi:     #cbd5e1;
 
-  --text-primary:  #e6edf3;
-  --text-secondary:#7d8590;
-  --text-muted:    #484f58;
+  --text-primary:  #0f172a;
+  --text-secondary:#64748b;
+  --text-muted:    #94a3b8;
 
-  --accent-req:    #58a6ff;
-  --accent-pub:    #3fb950;
-  --accent-queue:  #d29922;
-  --accent-rpc:    #a371f7;
+  --accent-req:    #3b82f6;
+  --accent-pub:    #22c55e;
+  --accent-queue:  #eab308;
+  --accent-rpc:    #8b5cf6;
   --accent:        var(--accent-req);
 
   --space-1: 4px;  --space-2: 8px;  --space-3: 12px;
@@ -31,13 +31,15 @@
 
   --sidebar-w: 340px;
   --header-h:  60px;
+  
+  font-family: 'Geist', system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
   height: 100%;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-family, 'Geist', system-ui, sans-serif);
   background: var(--bg-base);
   color: var(--text-primary);
   overflow: hidden;

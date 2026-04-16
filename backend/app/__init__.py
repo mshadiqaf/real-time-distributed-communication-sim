@@ -14,6 +14,11 @@ def create_app(config_overrides=None):
     CORS(flask_app, resources={r"/api/*": {"origins": "*"}})
     socketio.init_app(flask_app, cors_allowed_origins="*", async_mode="threading")
 
+    # Initialize MQTT for simulation
+    from app.mqtt_client import init_mqtt
+    mqtt_client = init_mqtt(flask_app)
+    mqtt_client.user_data_set({'socketio': socketio})
+
     @flask_app.get("/api/health")
     def health():
         return jsonify({"status": "ok"})
